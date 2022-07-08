@@ -119,17 +119,51 @@ parcelRequire = (function (modules, cache, entry, globalName) {
   return newRequire;
 })({"scripts.js":[function(require,module,exports) {
 // OpenWeatherMap API. Do not share it publicly.
-var api = '2e82c53713dd27d4748a39034119fff3'; //Replace with your API
+var api = 'c614df3da85e67ef16b3b016cdd067e6'; //Replace with your API
 
+var iconImg = document.getElementById('weather-icon');
+var loc = document.querySelector('#location');
+var tempC = document.querySelector('.c');
+var tempF = document.querySelector('.f');
+var desc = document.querySelector('.desc');
+var sunriseDOM = document.querySelector('.sunrise');
+var sunsetDOM = document.querySelector('.sunset');
 window.addEventListener('load', function () {
   var long;
   var lat; // Accessing Geolocation of User
 
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(function (position) {
+      // Storing Longitude and Latitude in variables
       long = position.coords.longitude;
       lat = position.coords.latitude;
-      console.log(long, lat);
+      var base = "https://api.openweathermap.org/data/2.5/weather?lat=".concat(lat, "&lon=").concat(long, "&appid=").concat(api, "&units=metric"); // Using fetch to get data
+
+      fetch(base).then(function (response) {
+        return response.json();
+      }).then(function (data) {
+        var temp = data.main.temp;
+        var place = data.name;
+        var _data$weather$ = data.weather[0],
+            description = _data$weather$.description,
+            icon = _data$weather$.icon;
+        var _data$sys = data.sys,
+            sunrise = _data$sys.sunrise,
+            sunset = _data$sys.sunset;
+        var iconUrl = "http://openweathermap.org/img/wn/".concat(icon, "@2x.png");
+        var fahrenheit = temp * 9 / 5 + 32; // Converting Epoch(Unix) time to GMT
+
+        var sunriseGMT = new Date(sunrise * 1000);
+        var sunsetGMT = new Date(sunset * 1000); // Interacting with DOM to show data
+
+        iconImg.src = iconUrl;
+        loc.textContent = "".concat(place);
+        desc.textContent = "".concat(description);
+        tempC.textContent = "".concat(temp.toFixed(2), " \xB0C");
+        tempF.textContent = "".concat(fahrenheit.toFixed(2), " \xB0F");
+        sunriseDOM.textContent = "".concat(sunriseGMT.toLocaleDateString(), ", ").concat(sunriseGMT.toLocaleTimeString());
+        sunsetDOM.textContent = "".concat(sunsetGMT.toLocaleDateString(), ", ").concat(sunsetGMT.toLocaleTimeString());
+      });
     });
   }
 });
